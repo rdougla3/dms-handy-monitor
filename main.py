@@ -24,7 +24,7 @@ def check_machine_errors(job):
             job.errors.append(content[1])
 
 def scroll_to_job(job):
-    print(f"Scrolling down to last known job {job.name}...")
+    print(f"Scrolling down to locate job {job.name}...")
     cntrl.go_to_printing_history()
     screen = pr.parse_screen()
     snapshots = list(screen.keys())
