@@ -48,7 +48,7 @@ if __name__ == "__main__":
                             job.status = status
                     else:
                         # Store new job
-                        # Tab on job to get details
+                        # Tap on job to get details
                         bounds = snapshots[s]
                         tap_by_bounds(bounds)
 
