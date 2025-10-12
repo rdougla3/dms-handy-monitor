@@ -14,13 +14,13 @@ if __name__ == "__main__":
     sheet_client = SheetClient()
 
     while True:
-        # Enter Printing History
-        os.system("adb shell input keyevent KEYCODE_BACK")
-        tap_by_desc("Me")
-        tap_by_desc("Printing History")
-        snapshots = parse_screen()
-        
         try:
+            # Enter Printing History
+            os.system("adb shell input keyevent KEYCODE_BACK")
+            tap_by_desc("Me")
+            tap_by_desc("Printing History")
+            snapshots = parse_screen()
+        
             for s in snapshots.keys():   
                 try:
                     current_screen = parse_screen()
