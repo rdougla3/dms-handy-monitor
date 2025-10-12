@@ -4,6 +4,17 @@ import subprocess
 import time
 from lxml import etree
 
+def go_to_printing_history():
+    os.system("adb shell input keyevent KEYCODE_BACK")
+    tap_by_desc("Me")
+    tap_by_desc("Printing History")
+
+def go_to_device_page(machine):
+    tap_by_desc("Back")
+    tap_by_desc("Devices")
+    tap_by_desc("brand_logo")
+    tap_by_desc(machine)
+
 def tap_by_desc(desc):
     node = find_by_desc(desc)
     if node:
@@ -25,6 +36,19 @@ def tap_by_bounds(bounds):
     time.sleep(1)
     subprocess.run(["adb", "shell", "input", "tap", str(x), str(y)])
     print(f"Tapped at {x},{y}")
+
+def scroll_up(screen):
+    swipe_by_bounds(list(screen.values())[0], list(screen.values())[len(screen) - 2])
+
+def scroll_down(screen):
+    swipe_by_bounds(list(screen.values())[len(screen) - 2], list(screen.values())[0])
+
+def swipe_by_bounds(bounds1, bounds2):
+    x1, y1 = get_bounds_center(bounds1)
+    x2, y2 = get_bounds_center(bounds2)
+    time.sleep(1)
+    subprocess.run(["adb", "shell", "input", "swipe", str(x1), str(y1), str(x2), str(y2)])
+    print(f"Swiped from {x1},{y1} to {x2},{y2}")
 
 def get_bounds_center(bounds_str):
     nums = list(map(int, re.findall(r'\d+', bounds_str)))

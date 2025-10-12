@@ -35,6 +35,11 @@ class JobStore:
 
     def find_job(self, name: str, date: datetime):
         return next((j for j in self.jobs if j.name == name and j.date == date), None)
+    
+    def get_latest_job(self):
+        if not self.jobs:
+            return None
+        return max(self.jobs, key=lambda j: j.date)
 
     def job_exists(self, name: str, date: datetime) -> bool:
         return any(
