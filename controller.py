@@ -22,7 +22,7 @@ def find_by_desc(desc):
 
 def tap_by_bounds(bounds):
     x, y = get_bounds_center(bounds)
-    time.sleep(0.5)
+    time.sleep(1)
     subprocess.run(["adb", "shell", "input", "tap", str(x), str(y)])
     print(f"Tapped at {x},{y}")
 
