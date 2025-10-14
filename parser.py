@@ -15,6 +15,7 @@ def parse_screen(long_clickable_only: bool = True):
     else:
         return extract_innermost_content_desc("view.xml")
     
+    
 def extract_innermost_content_desc(xml_path):
     """
     Parse a uiautomator XML dump and extract content-desc values
@@ -38,6 +39,7 @@ def extract_innermost_content_desc(xml_path):
 
     recurse(root)
     return results
+
 
 def extract_long_clickable_descriptions(xml_path):
     """
@@ -63,6 +65,7 @@ def extract_long_clickable_descriptions(xml_path):
                 results[split_desc] = bounds
 
     return results
+
 
 def parse_job_date(s: str) -> datetime:
     """Extract and parse a datetime from strings like 'Plate 1 (10/10/2025 23:41)'."""

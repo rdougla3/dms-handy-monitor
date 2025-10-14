@@ -1,12 +1,12 @@
+from typing import List, Optional
 import gspread
 from datetime import datetime
+
+from job_store import PrintJob
 
 CREDENTIALS_PATH = 'printer-monitoring-474822-bdfc6f0da109.json'
 SPREADSHEET_NAME = "print-records"
 WORKSHEET_NAME = "Sheet2"
-
-import gspread
-from datetime import datetime
 
 class SheetClient:
     def __init__(self):
@@ -30,7 +30,7 @@ class SheetClient:
     def find_job_row(self, name: str, date: datetime):
         """
         Checks the sheet for a job with the given name and date.
-        If found, returns the row number.
+        If found, returns the row number and row.
         If not found, returns the next available empty row number.
         """
         ws = self._connect()
@@ -49,7 +49,7 @@ class SheetClient:
                 continue
 
             if row_name == name and row_date == date:
-                return i, row[7] if len(row) > 7 else ""
+                return i, row
 
         return len(all_values) + 1, ""
 
@@ -59,7 +59,15 @@ class SheetClient:
         Overwrites that row’s data, or writes it to the next empty row if not found.
         """
         ws = self._connect()
-        row, errors = self.find_job_row(job.name, job.date)
+        i, row = self.find_job_row(job.name, job.date)
+        values = self.map_job_to_row(job, row)
+        ws.update(f"A{i}:H{i}", [values])
+
+    def map_job_to_row(self, job, row = None):
+        """
+        Maps PrintJob object to literals for data entry
+        """
+        errors = row[7] if row and len(row) > 7 else ""
         values = [
             job.name,
             job.status,
@@ -70,4 +78,60 @@ class SheetClient:
             ", ".join(job.materials),
             ", ".join(job.errors + [errors]) if errors not in job.errors else ", ".join(job.errors)
         ]
-        ws.update(f"A{row}:H{row}", [values])
+        return values
+
+    def get_oldest_in_progress_job(self) -> Optional[PrintJob]:
+        """
+        Returns the oldest PrintJob that is still in progress (status = 'Printing').
+        """
+        ws = self._connect()
+        rows = ws.get_all_values()
+
+        if not rows:
+            return None
+
+        # Convert and filter
+        jobs = [
+            self.row_to_printjob(r)
+            for r in rows
+            if len(r) >= 2 and r[1].strip().lower() == "printing"
+        ]
+
+        if not jobs:
+            return None
+
+        return min(jobs, key=lambda j: j.date)
+
+
+    def get_most_recent_job(self) -> Optional[PrintJob]:
+        """
+        Returns the most recent PrintJob based on the date column.
+        """
+        ws = self._connect()
+        rows = ws.get_all_values()
+
+        if not rows:
+            return None
+
+        jobs = [self.row_to_printjob(r) for r in rows if len(r) >= 3 and r[2].strip()]
+
+        if not jobs:
+            return None
+
+        return max(jobs, key=lambda j: j.date)
+
+    def row_to_printjob(self, row: List[str]) -> PrintJob:
+        """
+        Convert a Google Sheet row into a PrintJob instance.
+        name, status, date, duration, machine, weight, materials, errors
+        """
+        return PrintJob(
+            name=row[0],
+            status=row[1],
+            date=datetime.strptime(row[2], "%m/%d/%Y %H:%M"),
+            duration=float(row[3]) if row[3] else 0.0,
+            machine=row[4],
+            weight=float(row[5]) if row[5] else 0.0,
+            materials=[m.strip() for m in row[6].split(",")] if row[6] else [],
+            errors=[e.strip() for e in row[7].split(",")] if len(row) > 7 and row[7] else []
+        )
